@@ -154,6 +154,12 @@ struct NodeListItem: View {
 								Image(systemName: "\(node.hopsAway).square")
 									.font(.title2)
 							}
+						} else if node.hopsAway == -1 {
+							HStack {
+								IconAndText(systemName: "hare", text: "Hops Away:")
+								Image(systemName: "questionmark.square")
+									.font(.title2)
+							}
 						} else {
 							if node.snr != 0 && !node.viaMqtt {
 								LoRaSignalStrengthMeter(snr: node.snr, rssi: node.rssi, preset: modemPreset, compact: true)

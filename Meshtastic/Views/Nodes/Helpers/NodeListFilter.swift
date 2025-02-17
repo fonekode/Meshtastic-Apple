@@ -157,6 +157,8 @@ struct NodeListFilter: View {
 								Text("Direct")
 							} else if hopsAway == 1 {
 								Text("1 hop away")
+							} else if hopsAway == -1 {
+								Text("Unknown")
 							} else {
 								Text("\(Int(hopsAway)) or less hops away")							}
 						}

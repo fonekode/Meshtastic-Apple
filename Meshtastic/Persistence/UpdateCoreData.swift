@@ -159,9 +159,17 @@ func upsertNodeInfoPacket (packet: MeshPacket, context: NSManagedObjectContext) 
 			if packet.to == Constants.maximumNodeNum || packet.to == UserDefaults.preferredPeripheralNum {
 				newNode.channel = Int32(packet.channel)
 			}
+			if packet.hopStart != 0 && packet.hopLimit <= packet.hopStart {
+				newNode.hopsAway = Int32(packet.hopStart - packet.hopLimit)
+				Logger.data.info("💥 [NodeInfo-Insert] Set HopsAway to calculated hops")
+			} else if packet.hopStart == 0 || packet.hopLimit > packet.hopStart {
+				newNode.hopsAway = -1
+				Logger.data.info("💥 [NodeInfo-Insert] Set HopsAway to -1")
+			}
 			if let nodeInfoMessage = try? NodeInfo(serializedBytes: packet.decoded.payload) {
+				Logger.data.info("💥 [NodeInfo-Insert-Favorite] Set HopsAway to decoded HopsAway")
 				newNode.hopsAway = Int32(nodeInfoMessage.hopsAway)
-				newNode.favorite = nodeInfoMessage.isFavorite
+			    newNode.favorite = nodeInfoMessage.isFavorite
 			}
 
 			if let newUserMessage = try? User(serializedBytes: packet.decoded.payload) {
@@ -290,6 +298,10 @@ func upsertNodeInfoPacket (packet: MeshPacket, context: NSManagedObjectContext) 
 				}
 			} else if packet.hopStart != 0 && packet.hopLimit <= packet.hopStart {
 				fetchedNode[0].hopsAway = Int32(packet.hopStart - packet.hopLimit)
+				Logger.data.info("💥 [NodeInfo-Update] Set HopsAway to calculated hops")
+			} else if packet.hopStart == 0 || packet.hopLimit > packet.hopStart {
+				fetchedNode[0].hopsAway = -1
+				Logger.data.info("💥 [NodeInfo-Update] Set HopsAway to -1")
 			}
 			if fetchedNode[0].user == nil {
 				let newUser = createUser(num: Int64(truncatingIfNeeded: packet.from), context: context)
