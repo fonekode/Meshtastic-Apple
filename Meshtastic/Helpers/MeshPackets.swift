@@ -251,7 +251,7 @@ func deviceMetadataPacket (metadata: DeviceMetadata, fromNum: Int64, sessionPass
 	}
 }
 
-func nodeInfoPacket (nodeInfo: NodeInfo, channel: UInt32, context: NSManagedObjectContext) -> NodeInfoEntity? {
+func nodeInfoPacket (nodeInfo: NodeInfo, channel: UInt32, nodeNum: UInt32, context: NSManagedObjectContext) -> NodeInfoEntity? {
 
 	let logString = String.localizedStringWithFormat("mesh.log.nodeinfo.received %@".localized, String(nodeInfo.num))
 	MeshLogger.log("📟 \(logString)")
@@ -265,15 +265,22 @@ func nodeInfoPacket (nodeInfo: NodeInfo, channel: UInt32, context: NSManagedObje
 		let fetchedNode = try context.fetch(fetchNodeInfoRequest)
 		// Not Found Insert
 		if fetchedNode.isEmpty && nodeInfo.num > 0 {
-
+			
 			let newNode = NodeInfoEntity(context: context)
 			newNode.id = Int64(nodeInfo.num)
 			newNode.num = Int64(nodeInfo.num)
 			newNode.channel = Int32(nodeInfo.channel)
 			newNode.favorite = nodeInfo.isFavorite
 			newNode.ignored = nodeInfo.isIgnored
-			newNode.hopsAway = Int32(nodeInfo.hopsAway)
-
+			//Can't assume 0 hops is direct on new node 
+			if nodeInfo.hopsAway != 0 {
+				newNode.hopsAway = Int32(nodeInfo.hopsAway)
+				Logger.data.info("💥 [NodeInfoPacket-1] New Node HopsAway set to \(Int32(nodeInfo.hopsAway)) for: \(Int64(nodeInfo.num), privacy: .public)")
+			} else {
+				newNode.hopsAway = -1
+				Logger.data.info("💥 [NodeInfoPacket-1] New Node HopsAway set to \(Int32(-1)) for: \(Int64(nodeInfo.num), privacy: .public)")
+			}
+			
 			if nodeInfo.hasDeviceMetrics {
 				let telemetry = TelemetryEntity(context: context)
 				telemetry.batteryLevel = Int32(nodeInfo.deviceMetrics.batteryLevel)
@@ -361,8 +368,21 @@ func nodeInfoPacket (nodeInfo: NodeInfo, channel: UInt32, context: NSManagedObje
 			fetchedNode[0].channel = Int32(nodeInfo.channel)
 			fetchedNode[0].favorite = nodeInfo.isFavorite
 			fetchedNode[0].ignored = nodeInfo.isIgnored
-			fetchedNode[0].hopsAway = Int32(nodeInfo.hopsAway)
-
+			
+			//We can not assume 0 hops means direct
+			if nodeInfo.num == nodeNum {
+				fetchedNode[0].hopsAway = 0
+			} else if nodeInfo.hopsAway != 0 {
+				fetchedNode[0].hopsAway = Int32(nodeInfo.hopsAway)
+				Logger.data.info("💥 [NodeInfoPacket-2] Existing Node HopsAway set to \(Int32(nodeInfo.hopsAway)) for: \(Int64(nodeInfo.num), privacy: .public)")
+			} else if fetchedNode[0].hopsAway == 0 {
+				fetchedNode[0].hopsAway = Int32(nodeInfo.hopsAway)
+				Logger.data.info("💥 [NodeInfoPacket-1] Existing Node HopsAway Matches set to: \(Int32(nodeInfo.hopsAway)) for: \(Int64(nodeInfo.num), privacy: .public)")
+			} else {
+				fetchedNode[0].hopsAway = -1
+				Logger.data.info("💥 [NodeInfoPacket-1] Existing Node HopsAway: \(Int32(fetchedNode[0].hopsAway)) set to \(Int32(-1)) for: \(Int64(nodeInfo.num) , privacy: .public) : \(Int64(nodeNum)) device hops: \(Int32(nodeInfo.hopsAway), privacy: .public)")
+			}
+			
 			if nodeInfo.hasUser {
 				if fetchedNode[0].user == nil {
 					fetchedNode[0].user = UserEntity(context: context)

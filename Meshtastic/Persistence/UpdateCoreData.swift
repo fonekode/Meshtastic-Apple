@@ -161,13 +161,13 @@ func upsertNodeInfoPacket (packet: MeshPacket, context: NSManagedObjectContext) 
 			}
 			if packet.hopStart != 0 && packet.hopLimit <= packet.hopStart {
 				newNode.hopsAway = Int32(packet.hopStart - packet.hopLimit)
-				Logger.data.info("💥 [NodeInfo-Insert] Set HopsAway to calculated hops")
+				Logger.data.info("💥 [NodeInfo-Insert] Set HopsAway to \(newNode.hopsAway) for: \(packet.from, privacy: .public)")
 			} else if packet.hopStart == 0 || packet.hopLimit > packet.hopStart {
 				newNode.hopsAway = -1
-				Logger.data.info("💥 [NodeInfo-Insert] Set HopsAway to -1")
+				Logger.data.info("💥 [NodeInfo-Insert] Set HopsAway to -1 for: \(packet.from, privacy: .public)")
 			}
 			if let nodeInfoMessage = try? NodeInfo(serializedBytes: packet.decoded.payload) {
-				Logger.data.info("💥 [NodeInfo-Insert-Favorite] Set HopsAway to decoded HopsAway")
+				Logger.data.info("💥 [NodeInfo-Insert-Favorite] Set HopsAway to decoded HopsAway for: \(packet.from, privacy: .public)")
 				newNode.hopsAway = Int32(nodeInfoMessage.hopsAway)
 			    newNode.favorite = nodeInfoMessage.isFavorite
 			}
@@ -265,6 +265,7 @@ func upsertNodeInfoPacket (packet: MeshPacket, context: NSManagedObjectContext) 
 			if let nodeInfoMessage = try? NodeInfo(serializedBytes: packet.decoded.payload) {
 
 				fetchedNode[0].hopsAway = Int32(nodeInfoMessage.hopsAway)
+				Logger.data.info("💥 [NodeInfoMessage-Update] set HopsAway to \(fetchedNode[0].hopsAway) for: \(packet.from, privacy: .public)")
 				fetchedNode[0].favorite = nodeInfoMessage.isFavorite
 				if nodeInfoMessage.hasDeviceMetrics {
 					let telemetry = TelemetryEntity(context: context)
@@ -298,10 +299,10 @@ func upsertNodeInfoPacket (packet: MeshPacket, context: NSManagedObjectContext) 
 				}
 			} else if packet.hopStart != 0 && packet.hopLimit <= packet.hopStart {
 				fetchedNode[0].hopsAway = Int32(packet.hopStart - packet.hopLimit)
-				Logger.data.info("💥 [NodeInfo-Update] Set HopsAway to calculated hops")
+				Logger.data.info("💥 [NodeInfo-Update] Set HopsAway to \(fetchedNode[0].hopsAway) for: \(packet.from, privacy: .public)")
 			} else if packet.hopStart == 0 || packet.hopLimit > packet.hopStart {
 				fetchedNode[0].hopsAway = -1
-				Logger.data.info("💥 [NodeInfo-Update] Set HopsAway to -1")
+				Logger.data.info("💥 [NodeInfo-Update] Set HopsAway to -1 for: \(packet.from, privacy: .public)")
 			}
 			if fetchedNode[0].user == nil {
 				let newUser = createUser(num: Int64(truncatingIfNeeded: packet.from), context: context)

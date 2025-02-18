@@ -143,7 +143,7 @@ struct NodeListFilter: View {
 						Label("Hops Away", systemImage: "hare")
 						Slider(
 							value: $hopsAway,
-							in: -1...7,
+							in: -2...7,
 							step: 1
 						) {
 							Text("Speed")
@@ -157,10 +157,10 @@ struct NodeListFilter: View {
 								Text("Direct")
 							} else if hopsAway == 1 {
 								Text("1 hop away")
-							} else if hopsAway == -1 {
-								Text("Unknown")
 							} else {
 								Text("\(Int(hopsAway)) or less hops away")							}
+						} else if hopsAway == -1 {
+							Text("Unknown")
 						}
 					}
 					Toggle(isOn: $roleFilter) {

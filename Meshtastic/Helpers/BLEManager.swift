@@ -33,6 +33,7 @@ class BLEManager: NSObject, CBPeripheralDelegate, MqttClientProxyManagerDelegate
 	public var isConnected: Bool = false
 	public var isSubscribed: Bool = false
 	private var configNonce: UInt32 = 1
+	var myNodeNum: UInt32 = 0
 	var timeoutTimer: Timer?
 	var timeoutTimerCount = 0
 	var positionTimer: Timer?
@@ -667,11 +668,10 @@ class BLEManager: NSObject, CBPeripheralDelegate, MqttClientProxyManagerDelegate
 				// Handle Any local only packets we get over BLE
 			case .unknownApp:
 				var nowKnown = false
-
 				// MyInfo from initial connection
 				if decodedInfo.myInfo.isInitialized && decodedInfo.myInfo.myNodeNum > 0 {
 					let myInfo = myInfoPacket(myInfo: decodedInfo.myInfo, peripheralId: self.connectedPeripheral.id, context: context)
-
+					myNodeNum = decodedInfo.myInfo.myNodeNum
 					if myInfo != nil {
 						UserDefaults.preferredPeripheralNum = Int(myInfo?.myNodeNum ?? 0)
 						connectedPeripheral.num = myInfo?.myNodeNum ?? 0
@@ -704,7 +704,8 @@ class BLEManager: NSObject, CBPeripheralDelegate, MqttClientProxyManagerDelegate
 				// NodeInfo
 				if decodedInfo.nodeInfo.num > 0 {
 					nowKnown = true
-					if let nodeInfo = nodeInfoPacket(nodeInfo: decodedInfo.nodeInfo, channel: decodedInfo.packet.channel, context: context) {
+					Logger.data.info("💥 [BLE-Getting-Node-Info-From-Radio] packet hopStart: \(Int32(decodedInfo.packet.hopStart)) hopLimit: \(Int32(decodedInfo.packet.hopLimit), privacy: .public)")
+					if let nodeInfo = nodeInfoPacket(nodeInfo: decodedInfo.nodeInfo, channel: decodedInfo.packet.channel, nodeNum: myNodeNum, context: context) {
 						if self.connectedPeripheral != nil && self.connectedPeripheral.num == nodeInfo.num {
 							if nodeInfo.user != nil {
 								connectedPeripheral.shortName = nodeInfo.user?.shortName ?? "?"

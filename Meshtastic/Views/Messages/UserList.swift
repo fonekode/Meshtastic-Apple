@@ -24,7 +24,7 @@ struct UserList: View {
 	@State private var isEnvironment = false
 	@State private var distanceFilter = false
 	@State private var maxDistance: Double = 800000
-	@State private var hopsAway: Double = -1.0
+	@State private var hopsAway: Double = -2.0
 	@State private var roleFilter = false
 	@State private var deviceRoles: Set<Int> = []
 	@State private var editingFilters = false
@@ -327,6 +327,9 @@ struct UserList: View {
 			predicates.append(hopsAwayPredicate)
 		} else if hopsAway > -1.0 {
 			let hopsAwayPredicate = NSPredicate(format: "userNode.hopsAway > 0 AND userNode.hopsAway <= %i", Int32(hopsAway))
+			predicates.append(hopsAwayPredicate)
+		} else if hopsAway == -1.0 {
+			let hopsAwayPredicate = NSPredicate(format: "hopsAway == -1", Int32(hopsAway))
 			predicates.append(hopsAwayPredicate)
 		}
 		/// Online
