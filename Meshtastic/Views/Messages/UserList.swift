@@ -329,7 +329,7 @@ struct UserList: View {
 			let hopsAwayPredicate = NSPredicate(format: "userNode.hopsAway > 0 AND userNode.hopsAway <= %i", Int32(hopsAway))
 			predicates.append(hopsAwayPredicate)
 		} else if hopsAway == -1.0 {
-			let hopsAwayPredicate = NSPredicate(format: "hopsAway == -1", Int32(hopsAway))
+			let hopsAwayPredicate = NSPredicate(format: "userNode.hopsAway == -1", Int32(hopsAway))
 			predicates.append(hopsAwayPredicate)
 		}
 		/// Online
